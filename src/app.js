@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 
-const { port } = require('./config');
+const { serverPort } = require('./config');
 
 const app = express();
 
@@ -16,4 +16,4 @@ app.all('*', (req, res) => {
   res.status(404).send({ error: 'Page not found' });
 });
 
-app.listen(port, () => console.log(`Listening on port ${port}`));
+app.listen(serverPort, () => console.log(`Server is running on port ${serverPort}`));
