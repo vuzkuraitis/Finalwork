@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const UserRoutes = require('./routes/v1/users');
+const ExerciseRoutes = require('./routes/v1/exercises');
 
 const { serverPort } = require('./config');
 
@@ -15,6 +16,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/v1/users/', UserRoutes);
+app.use('/v1/exercises/', ExerciseRoutes);
 
 app.all('*', (req, res) => {
   res.status(404).send({ error: 'Page not found' });
