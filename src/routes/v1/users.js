@@ -44,7 +44,6 @@ router.post('/register', validation(registrationSchema), async (req, res) => {
 
     return res.send({ msg: 'Succesfully created account', accountId: data.insertId });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'A server issue has occured. Please try again later' });
   }
 });
@@ -98,8 +97,10 @@ router.post('/change-password', isLoggedIn, validation(changePasswordSchema), as
       `UPDATE users SET password = ${mysql.escape(newPasswordHash)} WHERE id = ${mysql.escape(req.user.accountId)}`,
     );
 
-    console.log(changePassDBRes);
     await con.end();
+    if (!changePassDBRes) {
+      return res.send({ msg: 'Something went wrong, please try again' });
+    }
     return res.send({ msg: 'Password has been changed' });
   } catch (err) {
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
