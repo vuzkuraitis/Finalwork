@@ -27,6 +27,18 @@ router.get('/', isLoggedIn, async (req, res) => {
   }
 });
 
+router.get('/sets', isLoggedIn, async (req, res) => {
+  try {
+    const con = await mysql.createConnection(mysqlConfig);
+    const [data] = await con.execute('SELECT * FROM sets LEFT JOIN exercises on sets.exercise_id = exercises.id');
+    await con.end();
+
+    return res.send(data);
+  } catch (err) {
+    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+  }
+});
+
 router.post('/addset', isLoggedIn, validation(setSchema), async (req, res) => {
   try {
     const con = await mysql.createConnection(mysqlConfig);

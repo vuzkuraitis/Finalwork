@@ -26,6 +26,18 @@ const changePasswordSchema = Joi.object({
   newPassword: Joi.string().required(),
 });
 
+router.get('/', isLoggedIn, async (req, res) => {
+  try {
+    const con = await mysql.createConnection(mysqlConfig);
+    const [data] = await con.execute(`SELECT name FROM users WHERE id = ${req.user.accountId}`);
+    await con.end();
+
+    return res.send(data);
+  } catch (err) {
+    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+  }
+});
+
 router.post('/register', validation(registrationSchema), async (req, res) => {
   try {
     const hash = bcrypt.hashSync(req.body.password, 10);
