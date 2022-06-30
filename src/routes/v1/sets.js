@@ -30,7 +30,9 @@ router.get('/', isLoggedIn, async (req, res) => {
 router.get('/sets', isLoggedIn, async (req, res) => {
   try {
     const con = await mysql.createConnection(mysqlConfig);
-    const [data] = await con.execute('SELECT * FROM sets LEFT JOIN exercises on sets.exercise_id = exercises.id');
+    const [data] = await con.execute(
+      `SELECT * FROM sets LEFT JOIN exercises on sets.user_id = exercises.id WHERE user_id = ${req.user.accountId}`,
+    );
     await con.end();
 
     return res.send(data);
