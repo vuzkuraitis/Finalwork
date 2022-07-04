@@ -9,8 +9,7 @@ const validation = require('../../middleware/validation');
 const router = express.Router();
 
 const exerciseSchema = Joi.object({
-  name: Joi.string().lowercase().required(),
-  description: Joi.string().lowercase().required(),
+  name: Joi.string().required(),
 });
 
 router.get('/', isLoggedIn, async (req, res) => {
@@ -29,8 +28,8 @@ router.post('/add', isLoggedIn, validation(exerciseSchema), async (req, res) => 
   try {
     const con = await mysql.createConnection(mysqlConfig);
     const [data] = await con.execute(`
-      INSERT INTO exercises (name, description)
-      VALUES (${mysql.escape(req.body.name)}, ${mysql.escape(req.body.description)})`);
+      INSERT INTO exercises (name)
+      VALUES (${mysql.escape(req.body.name)})`);
     await con.end();
 
     if (!data.insertId) {

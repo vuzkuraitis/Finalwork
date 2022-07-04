@@ -31,7 +31,7 @@ router.get('/sets', isLoggedIn, async (req, res) => {
   try {
     const con = await mysql.createConnection(mysqlConfig);
     const [data] = await con.execute(
-      `SELECT * FROM sets LEFT JOIN exercises on sets.user_id = exercises.id WHERE user_id = ${req.user.accountId}`,
+      `SELECT * FROM exercises LEFT JOIN sets ON exercises.id = sets.exercise_id WHERE user_id = ${req.user.accountId}`,
     );
     await con.end();
 
@@ -59,6 +59,23 @@ router.post('/addset', isLoggedIn, validation(setSchema), async (req, res) => {
     return res.send({ msg: 'Succesfully added a set' });
   } catch (err) {
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+  }
+});
+
+router.delete('/:id', isLoggedIn, async (req, res) => {
+  try {
+    const con = await mysql.createConnection(mysqlConfig);
+    const [data] = await con.execute(`DELETE FROM sets
+    WHERE id=${mysql.escape(req.params.id)}`);
+
+    await con.end();
+
+    if (!data.affectedRows) {
+      return res.status(500).send({ err: 'Please try again later' });
+    }
+    return res.send({ msg: 'Successfully deleted an Exercise' });
+  } catch (err) {
+    return res.status(500).send({ err: 'A server issue has occured - please try again later' });
   }
 });
 
