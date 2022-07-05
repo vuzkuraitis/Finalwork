@@ -41,11 +41,11 @@ router.post('/add', isLoggedIn, validation(exerciseSchema), async (req, res) => 
   }
 });
 
-router.post('/remove', isLoggedIn, async (req, res) => {
+router.delete('/:id', isLoggedIn, async (req, res) => {
   try {
     const con = await mysql.createConnection(mysqlConfig);
     const [data] = await con.execute(`DELETE FROM exercises 
-      WHERE id = ${mysql.escape(req.body.id)}`);
+      WHERE id = ${mysql.escape(req.params.id)}`);
     await con.end();
 
     if (!data.affectedRows) {
