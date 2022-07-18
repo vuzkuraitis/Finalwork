@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
 
 // eslint-disable-next-line object-curly-newline
-const { mysqlConfig, jwtSecret, mailServerPassword } = require('../../config');
+const { mysqlConfig, jwtSecret, mailServer, mailServerPassword } = require('../../config');
 const validation = require('../../middleware/validation');
 const isLoggedIn = require('../../middleware/auth');
 
@@ -155,7 +155,7 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
       return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
     }
 
-    const response = await fetch('https://email-sender-f34s9.ondigitalocean.app', {
+    const response = await fetch(mailServer, {
       method: 'POST',
       body: JSON.stringify({
         auth: mailServerPassword,
@@ -167,7 +167,7 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
     });
     const json = await response.json();
 
-    if (!json.id) {
+    if (!json.info) {
       return res.status(500).send({ err: 'Server issue occured. Please try again later' });
     }
     return res.send({ msg: 'If your email is correct you will shortly get a message' });
