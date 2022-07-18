@@ -150,9 +150,9 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
     INSERT INTO reset_tokens (email, code)
     VALUES (${mysql.escape(req.body.email)}, '${randomCode}')
    `);
-
+    console.log(data2);
     if (!data2.insertId) {
-      return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
+      return res.status(500).send({ msg: 'Server issue occured. Please try again later 1' });
     }
 
     const response = await fetch(mailServer, {
@@ -167,13 +167,15 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
     });
     const json = await response.json();
 
+    console.log(json);
+
     if (!json.id) {
-      return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+      return res.status(500).send({ err: 'Server issue occured. Please try again later 2' });
     }
 
     return res.send({ msg: 'If your email is correct you will shortly get a message' });
   } catch (err) {
-    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+    return res.status(500).send({ err: 'Server issue occured. Please try again later 3' });
   }
 });
 
