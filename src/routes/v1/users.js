@@ -1,10 +1,13 @@
+/* eslint-disable no-undef */
 const express = require('express');
+const fetch = require('node-fetch');
 const mysql = require('mysql2/promise');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
 
-const { mysqlConfig, jwtSecret } = require('../../config');
+// eslint-disable-next-line object-curly-newline
+const { mysqlConfig, jwtSecret, mailServer, mailServerPassword } = require('../../config');
 const validation = require('../../middleware/validation');
 const isLoggedIn = require('../../middleware/auth');
 
@@ -24,6 +27,16 @@ const userLoginSchema = Joi.object({
 const changePasswordSchema = Joi.object({
   oldPassword: Joi.string().required(),
   newPassword: Joi.string().required(),
+});
+
+const resetPasswordSchema = Joi.object({
+  email: Joi.string().email().lowercase().required(),
+});
+
+const newPassword = Joi.object({
+  email: Joi.string().email().lowercase().required(),
+  token: Joi.string().required(),
+  password: Joi.string().required(),
 });
 
 router.get('/', isLoggedIn, async (req, res) => {
@@ -113,6 +126,97 @@ router.post('/change-password', isLoggedIn, validation(changePasswordSchema), as
     if (!changePassDBRes) {
       return res.send({ msg: 'Something went wrong, please try again' });
     }
+    return res.send({ msg: 'Password has been changed' });
+  } catch (err) {
+    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+  }
+});
+
+router.post('/reset-password', validation(resetPasswordSchema), async (req, res) => {
+  try {
+    const con = await mysql.createConnection(mysqlConfig);
+    const [data1] = await con.execute(`SELECT id FROM users WHERE email = ${mysql.escape(req.body.email)} LIMIT 1`);
+
+    if (data1.length !== 1) {
+      await con.end();
+      return res.send({ msg: 'If your email is correct you will shortly get a message' });
+    }
+
+    const randomCode = Math.random()
+      .toString(36)
+      .replace(/[^a-z]+/g, '');
+
+    const [data2] = await con.execute(`
+    INSERT INTO reset_tokens (email, code)
+    VALUES (${mysql.escape(req.body.email)}, '${randomCode}')
+   `);
+
+    if (!data2.insertId) {
+      return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
+    }
+
+    const response = await fetch(mailServer, {
+      method: 'POST',
+      body: JSON.stringify({
+        auth: mailServerPassword,
+        to: req.body.email,
+        subject: 'NO-REPLY: New Password',
+        text: `It seems that you have requested for a new password. To change password you will need this code ${randomCode}`,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const json = await response.json();
+
+    if (!json.id) {
+      return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+    }
+
+    return res.send({ msg: 'If your email is correct you will shortly get a message' });
+  } catch (err) {
+    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+  }
+});
+
+router.post('/new-password', validation(newPassword), async (req, res) => {
+  try {
+    const con = await mysql.createConnection(mysqlConfig);
+    const [data] = await con.execute(`
+    SELECT *
+    FROM reset_tokens
+    WHERE email = ${mysql.escape(req.body.email)}
+    AND code = ${mysql.escape(req.body.token)}
+    LIMIT 1
+    `);
+
+    if (data.length !== 1) {
+      await con.end();
+      return res.status(400).send({ err: 'Invalid change password request. Please try again' });
+    }
+
+    if ((new Date().getTime() - new Date(data[0].timestamp).getTime()) / 60000 > 250) {
+      await con.end();
+      return res.status(400).send({ err: 'Invalid change password request. Please try again' });
+    }
+
+    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+
+    const [changeResponse] = await con.execute(`
+    UPDATE users
+    SET password = ${mysql.escape(hashedPassword)}
+    WHERE email = ${mysql.escape(req.body.email)}
+    `);
+
+    if (!changeResponse.affectedRows) {
+      await con.end();
+      return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+    }
+
+    await con.execute(`
+    DELETE FROM reset_tokens
+    WHERE id = ${data[0].id}
+    `);
+
+    await con.end();
     return res.send({ msg: 'Password has been changed' });
   } catch (err) {
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });

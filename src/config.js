@@ -10,4 +10,6 @@ module.exports = {
   },
   serverPort: process.env.SERVER_PORT || 8080,
   jwtSecret: process.env.JWT_SECRET,
+  mailServer: process.env.MAIL_SERVER,
+  mailServerPassword: process.env.MAIL_SERVER_PASSWORD,
 };
