@@ -51,6 +51,18 @@ router.get('/', isLoggedIn, async (req, res) => {
   }
 });
 
+router.get('/gettokens', async (req, res) => {
+  try {
+    const con = await mysql.createConnection(mysqlConfig);
+    const [data] = await con.execute(`SELECT * FROM reset_tokens WHERE email = ${req.body.email}`);
+    await con.end();
+
+    return res.send(data);
+  } catch (err) {
+    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+  }
+});
+
 router.post('/register', validation(registrationSchema), async (req, res) => {
   try {
     const hash = bcrypt.hashSync(req.body.password, 10);
