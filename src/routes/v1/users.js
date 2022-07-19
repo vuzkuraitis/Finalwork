@@ -167,12 +167,12 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
     });
     const json = await response.json();
 
-    if (!json.info) {
+    if (!json.id) {
       return res.status(500).send({ err: 'Server issue occured. Please try again later' });
     }
     return res.send({ msg: 'If your email is correct you will shortly get a message' });
   } catch (err) {
-    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+    return res.status(500).send({ err: 'Server issue occured. Please try again later 3' });
   }
 });
 
