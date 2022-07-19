@@ -172,7 +172,6 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
     }
     return res.send({ msg: 'If your email is correct you will shortly get a message' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
