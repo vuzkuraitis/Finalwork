@@ -39,6 +39,12 @@ const newPassword = Joi.object({
   password: Joi.string().required(),
 });
 
+const registerEvent = Joi.object({
+  event_id: Joi.number().required(),
+  name: Joi.string().required(),
+  email: Joi.string().email().lowercase().required(),
+});
+
 router.get('/', isLoggedIn, async (req, res) => {
   try {
     const con = await mysql.createConnection(mysqlConfig);
@@ -229,6 +235,43 @@ router.post('/new-password', validation(newPassword), async (req, res) => {
 
     await con.end();
     return res.send({ msg: 'Password has been changed' });
+  } catch (err) {
+    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+  }
+});
+
+router.post('/register-event', isLoggedIn, validation(registerEvent), async (req, res) => {
+  try {
+    const con = await mysql.createConnection(mysqlConfig);
+    const [data] = await con.execute(`INSERT INTO events_registration (event_id, name, email)
+          VALUES (${mysql.escape(req.body.event_id)}, 
+          ${mysql.escape(req.body.name)},
+          ${mysql.escape(req.body.email)})
+          `);
+    await con.end();
+
+    if (!data.insertId) {
+      return res.status(500).send({ err: 'Please try again' });
+    }
+    const response = await fetch(mailServer, {
+      method: 'POST',
+      body: JSON.stringify({
+        auth: mailServerPassword,
+        to: req.body.email,
+        subject: 'NO-REPLY: Confirmation Event Registration',
+        text: 'Here by we confirm that you have succesfully Registered at the Movement Camp in Lisbon from 11-18 September 2022.',
+        html: `<h3>${req.body.name}</h3>
+                <h3>${req.body.email}</h3>
+        `,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const json = await response.json();
+
+    if (!json.id) {
+      return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+    }
+    return res.send({ msg: 'Succesfully registered at Event. Please check your email for Confirmation.' });
   } catch (err) {
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
