@@ -260,9 +260,17 @@ router.post('/register-event', isLoggedIn, validation(registerEvent), async (req
         to: req.body.email,
         subject: 'NO-REPLY: Confirmation Event Registration',
         text: 'Here by we confirm that you have succesfully Registered at the Movement Camp in Lisbon from 11-18 September 2022.',
-        html: `<h3>${req.body.name}</h3>
+        html: `<h3 style="color: red;">${req.body.name}</h3>
                 <h3>${req.body.email}</h3>
+                <img src="cid: Logo"/>
         `,
+        attachments: [
+          {
+            filename: 'Logo.jpeg',
+            path: path.join(__dirname, 'Logo.jpeg'),
+            cid: 'Logo',
+          },
+        ],
       }),
       headers: { 'Content-Type': 'application/json' },
     });
