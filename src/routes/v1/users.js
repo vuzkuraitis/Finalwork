@@ -153,7 +153,9 @@ router.post('/change-password', isLoggedIn, validation(changePasswordSchema), as
 router.post('/reset-password', validation(resetPasswordSchema), async (req, res) => {
   try {
     const con = await mysql.createConnection(mysqlConfig);
-    const [data1] = await con.execute(`SELECT id FROM users WHERE email = ${mysql.escape(req.body.email)} LIMIT 1`);
+    const [data1] = await con.execute(
+      `SELECT id, name FROM users WHERE email = ${mysql.escape(req.body.email)} LIMIT 1`,
+    );
 
     if (data1.length !== 1) {
       await con.end();
@@ -180,6 +182,10 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
         to: req.body.email,
         subject: 'NO-REPLY: New Password',
         text: `It seems that you have requested for a new password. To change password you will need this code ${randomCode}`,
+        html: `<h3> Dear ${req.body.name}</h3>
+        <p>It seems that you have requested for a new password. To change password you will need this code ${randomCode}.</p>
+        <br><br>
+        <h4>Hamburg Athletics</h4>`,
       }),
       headers: { 'Content-Type': 'application/json' },
     });
@@ -243,14 +249,23 @@ router.post('/new-password', validation(newPassword), async (req, res) => {
 router.post('/register-event', isLoggedIn, validation(registerEvent), async (req, res) => {
   try {
     const con = await mysql.createConnection(mysqlConfig);
-    const [data] = await con.execute(`INSERT INTO events_registration (event_id, name, email)
+    const [data1] = await con.execute(
+      `SELECT email FROM events_registration WHERE email = ${mysql.escape(req.body.email)} LIMIT 1`,
+    );
+
+    if (data1.length === 1) {
+      await con.end();
+      return res.status(400).send({ err: 'This email has already been registered' });
+    }
+
+    const [data2] = await con.execute(`INSERT INTO events_registration (event_id, name, email)
           VALUES (${mysql.escape(req.body.event_id)}, 
           ${mysql.escape(req.body.name)},
           ${mysql.escape(req.body.email)})
           `);
     await con.end();
 
-    if (!data.insertId) {
+    if (!data2.insertId) {
       return res.status(500).send({ err: 'Please try again' });
     }
     const response = await fetch(mailServer, {
@@ -261,7 +276,7 @@ router.post('/register-event', isLoggedIn, validation(registerEvent), async (req
         subject: 'NO-REPLY: Confirmation Event Registration',
         text: 'Here by we confirm that you have succesfully Registered at the Movement Camp in Lisbon from 11-18 September 2022.',
         html: `<h3> Dear ${req.body.name}</h3>
-                <p>Here by we confirm that you have succesfully Registered with email:${req.body.email} at the Movement Camp in Lisbon from 11-18 September 2022.</p>
+                <p>Here by we confirm that you have succesfully Registered with email: ${req.body.email} at the Movement Camp in Lisbon from 11-18 September 2022.</p>
                 <br><br>
                 <h4>Hamburg Athletics</h4>
         `,
