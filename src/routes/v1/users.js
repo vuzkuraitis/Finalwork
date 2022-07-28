@@ -182,8 +182,9 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
         to: req.body.email,
         subject: 'NO-REPLY: New Password',
         text: `It seems that you have requested for a new password. To change password you will need this code ${randomCode}`,
-        html: `<h3> Dear ${req.body.name}</h3>
-        <p>It seems that you have requested for a new password. To change password you will need this code ${randomCode}.</p>
+        html: `<h3> Dear ${data1.name}</h3>
+        <p>It seems that you have requested for a new password. To change password you will need this code:<br><br> 
+        <span style="color: #636dd1; font-size: 1.5rem;">${randomCode}<span></p>
         <br><br>
         <h4>Hamburg Athletics</h4>`,
       }),
@@ -196,7 +197,7 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
     }
     return res.send({ msg: 'If your email is correct you will shortly get a message' });
   } catch (err) {
-    return res.status(500).send({ err: 'Server issue occured. Please try again later 3' });
+    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
 
