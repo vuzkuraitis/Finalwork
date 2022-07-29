@@ -186,7 +186,14 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
         <p>It seems that you have requested for a new password. To change password you will need this code:<br><br> 
         <span style="color: #636dd1; font-size: 1.5rem;">${randomCode}<span></p>
         <br><br>
-        <h4>Hamburg Athletics</h4>`,
+        <img src="cid:logo" style="width: 200px"/>`,
+        attachments: [
+          {
+            filename: 'logo.jpeg',
+            path: `${__dirname}/logo.jpeg`,
+            cid: 'logo',
+          },
+        ],
       }),
       headers: { 'Content-Type': 'application/json' },
     });
