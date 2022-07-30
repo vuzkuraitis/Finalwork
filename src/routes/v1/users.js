@@ -184,7 +184,8 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
         html: `<h3> Dear ${data1[0].name}</h3>
         <p>It seems that you have requested for a new password. To change password you will need this code:<br><br> 
         <span style="color: #636dd1; font-size: 1.5rem;">${randomCode}<span></p>
-        <br><br>`,
+        <br><br>
+        <img/ src='cid:logo' style='width: 200px'>`,
       }),
       headers: { 'Content-Type': 'application/json' },
     });
@@ -273,11 +274,10 @@ router.post('/register-event', isLoggedIn, validation(registerEvent), async (req
         auth: mailServerPassword,
         to: req.body.email,
         subject: 'NO-REPLY: Confirmation Event Registration',
-        text: 'Here by we confirm that you have succesfully Registered at the Movement Camp in Lisbon from 11-18 September 2022.',
         html: `<h3> Dear ${req.body.name}</h3>
                 <p>Here by we confirm that you have succesfully Registered with email: ${req.body.email} at the Movement Camp in Lisbon from 11-18 September 2022.</p>
                 <br><br>
-                <h4>Hamburg Athletics</h4>
+                <img/ src='cid:logo' style='width: 200px'>
         `,
       }),
       headers: { 'Content-Type': 'application/json' },
